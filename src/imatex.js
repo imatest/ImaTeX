@@ -3,7 +3,7 @@
  *
  * ## Why it has no dependencies
  *
- * ImaTeX never imports a maths renderer. It takes a `render(tex, target)` callback and calls
+ * ImaTeX never imports a maths renderer. It takes a `render(tex, target, display)` callback and calls
  * it; the host decides whether that is latex.js, KaTeX, MathJax or a server round trip. That
  * one decision is what lets it work with latex.js (which is what it was built for) without
  * being welded to it, and what keeps the package at zero runtime dependencies.
@@ -68,7 +68,9 @@ export class ImaTeX {
    * @param {HTMLElement} opts.mount      where to build the UI
    * @param {string}  [opts.value]        initial LaTeX
    * @param {boolean} [opts.display]      display maths rather than inline
-   * @param {(tex:string,target:HTMLElement)=>void|Promise<void>} opts.render
+   * @param {(tex:string,target:HTMLElement,display:boolean)=>void|Promise<void>} opts.render
+   *   `display` is the toggle's current state, so the preview can be typeset the way the
+   *   formula will actually appear. A host that does not care may ignore it.
    * @param {(tex:string,display:boolean)=>void} [opts.onSubmit]
    * @param {()=>void} [opts.onCancel]
    * @param {(tex:string)=>void} [opts.onChange]
@@ -336,7 +338,7 @@ export class ImaTeX {
     this.preview.textContent = '';
     if (!tex.trim()) { this.preview.appendChild(el('span', 'imatex-empty', 'Nothing to preview yet.')); return; }
     try {
-      await this.render(tex, this.preview);
+      await this.render(tex, this.preview, this.displayMode);
     } catch (e) {
       // A half-typed formula is invalid most of the time, so this is the normal state while
       // someone works, not an error worth shouting about.

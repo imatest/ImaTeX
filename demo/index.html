@@ -9,11 +9,18 @@
   import { ImaTeX } from '../src/imatex.js';
   // The host owns the renderer. This is the latex.js wiring; a host using KaTeX would pass a
   // different function and ImaTeX would not know the difference.
-  const render = (tex, target) => {
+  const render = (tex, target, display) => {
+    const math = display ? `$$${tex}$$` : `$${tex}$`;
     const gen = new window.latexjs.HtmlGenerator({ hyphenate: false });
-    const doc = window.latexjs.parse(`\\documentclass{article}\\begin{document}$${tex}$\\end{document}`, { generator: gen });
+    const doc = window.latexjs.parse(`\\documentclass{article}\\begin{document}${math}\\end{document}`, { generator: gen });
+    // Take the maths out of latex.js's page body rather than appending the body: see README.
+    const held = document.createElement('div');
+    held.appendChild(doc.domFragment());
+    const painted = held.querySelectorAll('.katex-display').length
+      ? held.querySelectorAll('.katex-display') : held.querySelectorAll('.katex');
+    if (!painted.length) throw new Error('no maths in that');
     target.textContent = '';
-    target.appendChild(doc.domFragment());
+    for (const el of painted) target.appendChild(el);
   };
   window.ed = new ImaTeX({ mount: document.getElementById('host'), value: '\\frac{a}{b} + \\sqrt{x^{2}}', render });
 </script>

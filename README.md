@@ -10,16 +10,28 @@ Built for [latex.js](https://latex.js.org/), but not welded to it.
 
 ## The one design decision worth knowing
 
-**ImaTeX never imports a maths renderer.** It takes a `render(tex, target)` callback and calls
-it. The host decides whether that is latex.js, KaTeX, MathJax, or a server round trip.
+**ImaTeX never imports a maths renderer.** It takes a `render(tex, target, display)` callback
+and calls it. The host decides whether that is latex.js, KaTeX, MathJax, or a server round
+trip. `display` is the toggle's current state, so the preview can be typeset the way the
+formula will actually appear; ignore it if that does not matter to you.
 
 ```js
-const render = (tex, target) => {
+const render = (tex, target, display) => {
+  const math = display ? `$$${tex}$$` : `$${tex}$`;
   const gen = new latexjs.HtmlGenerator({ hyphenate: false });
-  const doc = latexjs.parse(`\\documentclass{article}\\begin{document}$${tex}$\\end{document}`,
+  const doc = latexjs.parse(`\\documentclass{article}\\begin{document}${math}\\end{document}`,
                             { generator: gen });
   target.textContent = '';
-  target.appendChild(doc.domFragment());
+  // latex.js hands back a whole page body: a `div` holding paragraphs. Take the maths out of
+  // it rather than appending it, or you put a block element inside inline content. If your
+  // host serialises the result and parses it again, that block closes the enclosing
+  // paragraph and the formula walks out of its own sentence.
+  const held = document.createElement('div');
+  held.appendChild(doc.domFragment());
+  const painted = held.querySelectorAll('.katex-display').length
+    ? held.querySelectorAll('.katex-display') : held.querySelectorAll('.katex');
+  if (!painted.length) throw new Error('no maths in that');
+  for (const el of painted) target.appendChild(el);
 };
 ```
 
