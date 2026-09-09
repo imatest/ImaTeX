@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CATALOGUE, COMMANDS, describe } from '../src/catalogue.js';
 import { tokenize, tokenAt, braceProblems, KIND } from '../src/tokenize.js';
+import { QUICK_FIXES, findFixes, applyFixes, describeFixes } from '../src/fixes.js';
 
 /**
  * The parts of ImaTeX that do not need a DOM. The UI is exercised in a browser (see
@@ -117,4 +118,54 @@ test('every command a snippet inserts is one the tokenizer will recognise', () =
       }
     }
   }
+});
+
+// ---- quick fixes (the spacing control symbols) ------------------------------------------
+
+test('the fix table survives being written in JavaScript', () => {
+  // `'\;'` is just `';'`: a single backslash before a non-escape character is dropped by the
+  // parser, so a table written the obvious way silently matches the wrong thing.
+  for (const f of QUICK_FIXES) {
+    assert.equal(f.from[0], '\\', `${JSON.stringify(f.from)} lost its backslash`);
+    assert.equal(f.to.slice(0, 2), '\\' + f.to[1], `${JSON.stringify(f.to)} lost its backslash`);
+  }
+});
+
+test('the reported formula is repaired into something that renders', () => {
+  const tex = '\\displaystyle f(\\text{cycles/degree}) = '
+    + '\\frac{\\pi\\: n_{PH}\\: d\\: f(\\text{cycles/pixel})}{180\\: PH}';
+  const { out, applied } = applyFixes(tex);
+  assert.equal(applied.length, 1);
+  assert.equal(applied[0].count, 4);
+  assert.ok(!out.includes('\\:'));
+  assert.match(out, /\\frac\{\\pi\\medspace n_\{PH\}\\medspace d\\medspace/);
+});
+
+test('a line break followed by a colon is not mistaken for one', () => {
+  // `\\:` is a line break and then an ordinary colon. A text search finds `\:` two characters
+  // in and rewriting it would eat half the line break, so the match is over tokens.
+  const src = '\\begin{aligned}a\\\\ : b\\end{aligned}';
+  assert.equal(applyFixes(src).out, src);
+  assert.deepEqual(findFixes(src), []);
+});
+
+test('nothing is offered for input that has none of them', () => {
+  assert.deepEqual(findFixes('\\frac{a}{b} \\, c'), []);
+  assert.equal(applyFixes('\\frac{a}{b}').out, '\\frac{a}{b}');
+});
+
+test('an empty table turns the feature off', () => {
+  assert.deepEqual(findFixes('a\\: b', []), []);
+  assert.equal(applyFixes('a\\: b', []).out, 'a\\: b');
+});
+
+test('every replacement is a real command the catalogue can describe', () => {
+  // A fix that swaps one unknown command for another would trade a render error for a
+  // highlighted unknown, which is a worse place to leave someone.
+  for (const f of QUICK_FIXES) assert.ok(COMMANDS.has(f.to), `${f.to} is not in the catalogue`);
+});
+
+test('the fix is described in terms of what it will do', () => {
+  const { applied } = applyFixes('a\\: b\\: c');
+  assert.equal(describeFixes(applied), '2 × \\: (medium space) → \\medspace');
 });

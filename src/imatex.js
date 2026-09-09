@@ -24,6 +24,7 @@
  */
 import { CATALOGUE, COMMANDS, describe } from './catalogue.js';
 import { tokenize, tokenAt, braceProblems, KIND } from './tokenize.js';
+import { QUICK_FIXES, findFixes, applyFixes, describeFixes } from './fixes.js';
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const el = (tag, cls, text) => {
@@ -74,6 +75,8 @@ export class ImaTeX {
    * @param {(tex:string,display:boolean)=>void} [opts.onSubmit]
    * @param {()=>void} [opts.onCancel]
    * @param {(tex:string)=>void} [opts.onChange]
+   * @param {{from:string,to:string,why:string}[]} [opts.fixes]  offered by the Quick fix
+   *   button when the preview fails; defaults to the spacing control symbols, `[]` to disable
    */
   constructor(opts) {
     this.opts = opts;
@@ -117,6 +120,14 @@ export class ImaTeX {
     this.displayMode = !!this.opts.display;
     this.displayBtn.setAttribute('aria-pressed', String(this.displayMode));
     bar.appendChild(this.displayBtn);
+    // Only ever shown when the preview has actually failed and a listed fix applies, so it is
+    // an answer to an error on screen rather than a standing invitation to rewrite the input.
+    this.fixes = this.opts.fixes ?? QUICK_FIXES;
+    this.fixBtn = el('button', 'imatex-tool is-fix', 'Quick fix');
+    this.fixBtn.type = 'button';
+    this.fixBtn.hidden = true;
+    this.fixBtn.onclick = () => this.quickFix();
+    bar.appendChild(this.fixBtn);
     this.status = el('span', 'imatex-status');
     bar.appendChild(this.status);
     main.appendChild(bar);
@@ -327,6 +338,21 @@ export class ImaTeX {
     this.status.className = `imatex-status${bad.length ? ' is-warn' : ''}`;
   }
 
+  /**
+   * Apply every applicable fix, as one undoable step, and say what changed. The caret is left
+   * at the end because the text around it has moved; putting it back where it looked like it
+   * was would land it inside a macro name it was never in.
+   */
+  quickFix() {
+    const { out, applied } = applyFixes(this.input.value, this.fixes);
+    if (!applied.length) return;
+    this.setValue(out, { caret: out.length });
+    this.queuePreview(0);
+    this.status.textContent = `Fixed: ${describeFixes(applied)}`;
+    this.status.className = 'imatex-status';
+    this.input.focus();
+  }
+
   queuePreview(delay = 250) {
     clearTimeout(this.previewTimer);
     this.previewTimer = setTimeout(() => this.paintPreview(), delay);
@@ -339,12 +365,31 @@ export class ImaTeX {
     if (!tex.trim()) { this.preview.appendChild(el('span', 'imatex-empty', 'Nothing to preview yet.')); return; }
     try {
       await this.render(tex, this.preview, this.displayMode);
+      this.offerFixes(null);
     } catch (e) {
       // A half-typed formula is invalid most of the time, so this is the normal state while
       // someone works, not an error worth shouting about.
       this.preview.textContent = '';
       this.preview.appendChild(el('span', 'imatex-invalid', String(e && e.message || e)));
+      this.offerFixes(findFixes(tex, this.fixes));
     }
+  }
+
+  /**
+   * Show the Quick fix button, and say what the renderer actually objected to.
+   *
+   * The message a renderer gives for an undefined control symbol is about wherever its parse
+   * came apart, which is usually the end of the document and never the two characters at
+   * fault. When a listed fix matches, the culprit is named here instead.
+   */
+  offerFixes(applied) {
+    const has = !!applied?.length;
+    this.fixBtn.hidden = !has;
+    if (!has) return;
+    this.fixBtn.title = `Replace ${describeFixes(applied)}`;
+    this.preview.appendChild(el('span', 'imatex-fix-note',
+      `${applied.map((f) => f.from).join(', ')} is not supported by this renderer. `
+      + `Quick fix replaces it with ${applied.map((f) => f.to).join(', ')}, which means the same thing.`));
   }
 
   // ---- hover ---------------------------------------------------------------------------

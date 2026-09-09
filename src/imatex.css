@@ -70,6 +70,11 @@
                color: inherit; background: var(--_bg); border: 1px solid var(--_line); border-radius: 5px; }
 .imatex-tool:disabled { opacity: 0.4; cursor: default; }
 .imatex-tool[aria-pressed="true"] { background: var(--_accent); border-color: var(--_accent); color: #fff; }
+/* Wider than the icon buttons because it carries a word, and tinted so it reads as the
+   answer to the error under it rather than as another tool. */
+.imatex-tool.is-fix { width: auto; padding: 0 0.55rem; font-size: 0.78rem; font-weight: 600;
+                      color: var(--_accent); border-color: var(--_accent); }
+.imatex-fix-note { display: block; margin-top: 0.4rem; font-size: 0.8rem; color: var(--_muted); }
 .imatex-status { margin-left: auto; font-size: 0.75rem; color: var(--_muted); }
 .imatex-status.is-warn { color: var(--_warn); }
 

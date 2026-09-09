@@ -211,9 +211,16 @@ export const CATALOGUE = [
     { label: 'Size and spacing', items: [
       ['\\displaystyle ', 'render as display maths'], ['\\textstyle ', 'render as inline maths'],
       ['\\scriptstyle ', 'render at script size'],
-      ['\\,', 'a thin space'], ['\\:', 'a medium space'], ['\\;', 'a thick space'],
-      ['\\!', 'a negative thin space'], ['\\quad', 'a quad of space'],
+      // The named macros, not the punctuation forms `\\:` `\\;` `\\!`. Those are TeX
+      // primitives that several web renderers never define, and an undefined control symbol
+      // derails the parse: offering them from the palette hands someone input that breaks
+      // their preview with a message about the end of the document. They are still described
+      // on hover, and Quick fix swaps them for these.
+      ['\\,', 'a thin space'], ['\\medspace', 'a medium space'], ['\\thickspace', 'a thick space'],
+      ['\\negthinspace', 'a negative thin space'], ['\\quad', 'a quad of space'],
       ['\\qquad', 'two quads of space'], ['\\ ', 'an ordinary space'],
+      ['\\thinspace', 'a thin space (named)'], ['\\enspace', 'half a quad of space'],
+      ['\\hspace{#}', 'space of a given width'],
       ['\\phantom{#}', 'space the size of something invisible'],
       ['\\color{red}{#}', 'coloured maths'],
     ] },
@@ -271,6 +278,14 @@ export const EXTRA_DOCS = new Map(Object.entries({
   '\\mathclose': 'treat as a closing delimiter',
   '\\limits': 'put the limits above and below',
   '\\nolimits': 'put the limits to the side',
+  // Written as punctuation, these are TeX primitives that several web renderers (latex.js
+  // among them) never define. Documented so a hover on pasted input explains them and does
+  // not just flag them as unknown; the palette offers the named forms, and Quick fix swaps
+  // them over.
+  '\\:': 'a medium space (not implemented by every renderer: \\medspace)',
+  '\\;': 'a thick space (not implemented by every renderer: \\thickspace)',
+  '\\!': 'a negative thin space (not implemented by every renderer: \\negthinspace)',
+  '\\>': 'a medium space, plain TeX (not implemented by every renderer: \\medspace)',
 }));
 
 /** What a command means, for a tooltip. Null when nothing is known about it. */
