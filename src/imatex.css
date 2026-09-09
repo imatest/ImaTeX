@@ -43,17 +43,13 @@
 .imatex-side { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--_line); background: var(--_panel); }
 .imatex-search { margin: 0.5rem; padding: 0.35rem 0.5rem; font: inherit; color: inherit;
                  background: var(--_bg); border: 1px solid var(--_line); border-radius: 5px; }
-/* Every category heading stays on screen and only the open one scrolls. Letting the whole
-   column scroll instead buried the other seven headings under Greek's fifty tiles, a screen
-   and a half down, so the hierarchy was invisible exactly when it was being used to navigate. */
-.imatex-tree { display: flex; flex-direction: column; min-height: 0; overflow: hidden;
-               padding: 0 0.5rem 0.6rem; }
-.imatex-cat { flex: 0 0 auto; }
-.imatex-cat[open] { flex: 1 1 auto; min-height: 0; overflow: auto; }
-.imatex-cat > summary { cursor: pointer; padding: 0.3rem 0.2rem; font-weight: 600; list-style: revert; }
-/* The heading of the open category scrolls with its own tiles otherwise, so the one label you
-   want while scrolling is the first thing to leave. */
-.imatex-cat[open] > summary { position: sticky; top: 0; z-index: 1; background: var(--_panel); }
+/* One scrolling column, not a scroller per category: a pane that scrolls inside another pane
+   is a wheel that stops working halfway down the list, and the palette reads as one list.
+   Sticky headings are what keep the hierarchy usable in it, so the label of whatever you are
+   scrolling through stays put and the next category is always the next thing you reach. */
+.imatex-tree { overflow: auto; padding: 0 0.5rem 0.6rem; }
+.imatex-cat > summary { cursor: pointer; padding: 0.3rem 0.2rem; font-weight: 600; list-style: revert;
+                        position: sticky; top: 0; z-index: 1; background: var(--_panel); }
 .imatex-group { margin: 0.35rem 0 0.2rem; font-size: 0.7rem; text-transform: uppercase;
                 letter-spacing: 0.05em; color: var(--_muted); }
 .imatex-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(3.1rem, 1fr)); gap: 0.25rem; }
