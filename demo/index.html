@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset="utf-8"><title>ImaTeX demo</title>
+<link rel="stylesheet" href="./katex.css">
+<link rel="stylesheet" href="../src/imatex.css">
+<style>html,body{margin:0;font:14px system-ui}#host{height:100vh}</style>
+<div id="host"></div>
+<script src="./latex.js"></script>
+<script type="module">
+  import { ImaTeX } from '../src/imatex.js';
+  // The host owns the renderer. This is the latex.js wiring; a host using KaTeX would pass a
+  // different function and ImaTeX would not know the difference.
+  const render = (tex, target) => {
+    const gen = new window.latexjs.HtmlGenerator({ hyphenate: false });
+    const doc = window.latexjs.parse(`\\documentclass{article}\\begin{document}$${tex}$\\end{document}`, { generator: gen });
+    target.textContent = '';
+    target.appendChild(doc.domFragment());
+  };
+  window.ed = new ImaTeX({ mount: document.getElementById('host'), value: '\\frac{a}{b} + \\sqrt{x^{2}}', render });
+</script>

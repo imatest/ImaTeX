@@ -1,0 +1,29 @@
+{
+  "name": "imatex",
+  "version": "0.1.0",
+  "description": "A dependency-free WYSIWYG LaTeX editor that works with latex.js, KaTeX or any renderer you hand it.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./element": "./src/element.js",
+    "./modal": "./src/modal.js",
+    "./catalogue": "./src/catalogue.js",
+    "./imatex.css": "./src/imatex.css"
+  },
+  "files": ["src", "README.md", "LICENSE"],
+  "sideEffects": ["./src/element.js", "./src/imatex.css"],
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "demo": "python3 -m http.server 8792"
+  },
+  "keywords": ["latex", "latex.js", "katex", "math", "editor", "wysiwyg", "web-component"],
+  "repository": { "type": "git", "url": "git+https://github.com/imatest/ImaTeX.git" },
+  "bugs": { "url": "https://github.com/imatest/ImaTeX/issues" },
+  "homepage": "https://github.com/imatest/ImaTeX#readme",
+  "dependencies": {},
+  "peerDependencies": {},
+  "engines": { "node": ">=18" }
+}

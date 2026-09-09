@@ -1,0 +1,119 @@
+/**
+ * ImaTeX styling.
+ *
+ * Everything a host might want to change is a custom property with a usable fallback, so
+ * ImaDoc can hand over its own palette (`--imatex-bg: var(--surface)` and so on) without
+ * forking this file, and a host that hands over nothing still gets something legible.
+ *
+ * There is no reset here and no styling of bare tags: this mounts inside someone else's page.
+ */
+.imatex {
+  --_bg:     var(--imatex-bg, #fff);
+  --_panel:  var(--imatex-panel, #f6f7f9);
+  --_fg:     var(--imatex-fg, #1b2330);
+  --_muted:  var(--imatex-muted, #667085);
+  --_line:   var(--imatex-line, #d8dee9);
+  --_accent: var(--imatex-accent, #2f6fdd);
+  --_warn:   var(--imatex-warn, #b3541e);
+  --_mono:   var(--imatex-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(11rem, 17rem) minmax(0, 1fr);
+  gap: 0;
+  min-height: 0;
+  height: 100%;
+  color: var(--_fg);
+  background: var(--_bg);
+  font-size: 0.9rem;
+}
+
+/* ---- left: the symbol tree ---------------------------------------------------------- */
+.imatex-side { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--_line); background: var(--_panel); }
+.imatex-search { margin: 0.5rem; padding: 0.35rem 0.5rem; font: inherit; color: inherit;
+                 background: var(--_bg); border: 1px solid var(--_line); border-radius: 5px; }
+.imatex-tree { overflow: auto; padding: 0 0.5rem 0.6rem; }
+.imatex-cat > summary { cursor: pointer; padding: 0.3rem 0.2rem; font-weight: 600; list-style: revert; }
+.imatex-group { margin: 0.35rem 0 0.2rem; font-size: 0.7rem; text-transform: uppercase;
+                letter-spacing: 0.05em; color: var(--_muted); }
+.imatex-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(3.1rem, 1fr)); gap: 0.25rem; }
+.imatex-sym { display: flex; flex-direction: column; align-items: center; justify-content: center;
+              gap: 0.1rem; min-height: 3rem; padding: 0.2rem; cursor: pointer; overflow: hidden;
+              background: var(--_bg); border: 1px solid var(--_line); border-radius: 5px; color: inherit; }
+.imatex-sym:hover { border-color: var(--_accent); }
+.imatex-sym-glyph { display: block; min-height: 1.2em; line-height: 1.1; pointer-events: none; }
+/* The label is the fallback identity when the glyph does not draw, so it never disappears
+   entirely — it truncates instead. */
+.imatex-sym-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+                    font-size: 0.6rem; color: var(--_muted); }
+
+/* ---- right: bar, code, preview ------------------------------------------------------ */
+.imatex-main { display: grid; grid-template-rows: auto minmax(6rem, 1fr) minmax(6rem, 1fr); min-height: 0; min-width: 0; }
+.imatex-bar { display: flex; align-items: center; gap: 0.3rem; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--_line); }
+.imatex-tool { min-width: 1.9rem; padding: 0.2rem 0.4rem; font: inherit; line-height: 1.4; cursor: pointer;
+               color: inherit; background: var(--_bg); border: 1px solid var(--_line); border-radius: 5px; }
+.imatex-tool:disabled { opacity: 0.4; cursor: default; }
+.imatex-tool[aria-pressed="true"] { background: var(--_accent); border-color: var(--_accent); color: #fff; }
+.imatex-status { margin-left: auto; font-size: 0.75rem; color: var(--_muted); }
+.imatex-status.is-warn { color: var(--_warn); }
+
+/* The code editor. The <pre> and the textarea must agree on every metric that decides where a
+   glyph lands, or the paint drifts away from the text down the page — one rule, both elements. */
+.imatex-code { position: relative; min-height: 0; overflow: hidden; }
+.imatex-code > .imatex-hl,
+.imatex-code > .imatex-input {
+  margin: 0; padding: 0.55rem 0.7rem; border: 0;
+  font-family: var(--_mono); font-size: 0.85rem; line-height: 1.55;
+  letter-spacing: normal; tab-size: 2; white-space: pre-wrap; overflow-wrap: break-word;
+}
+.imatex-hl { position: absolute; inset: 0; overflow: auto; pointer-events: none; background: var(--_bg); }
+.imatex-input { position: relative; width: 100%; height: 100%; resize: none; overflow: auto;
+                background: transparent; color: transparent; caret-color: var(--_fg); outline: none; }
+.imatex-input::selection { background: var(--_accent); color: #fff; }
+
+.imatex-t-command { color: var(--imatex-c-command, #2f6f9f); }
+.imatex-t-command.imatex-t-unknown { color: var(--imatex-c-unknown, #b3541e); text-decoration: underline dotted; }
+.imatex-t-brace   { color: var(--imatex-c-brace, #8a56c9); }
+.imatex-t-bracket { color: var(--imatex-c-brace, #8a56c9); }
+.imatex-t-script  { color: var(--imatex-c-script, #1f7a4d); font-weight: 600; }
+.imatex-t-align   { color: var(--imatex-c-align, #b3541e); font-weight: 600; }
+.imatex-t-number  { color: var(--imatex-c-number, #a15c00); }
+.imatex-t-operator{ color: var(--imatex-c-operator, #667085); }
+.imatex-t-comment { color: var(--imatex-c-comment, #8b95a5); font-style: italic; }
+
+.imatex-preview-wrap { display: flex; flex-direction: column; min-height: 0; border-top: 1px solid var(--_line); background: var(--_panel); }
+.imatex-legend { padding: 0.25rem 0.7rem; font-size: 0.7rem; text-transform: uppercase;
+                 letter-spacing: 0.05em; color: var(--_muted); }
+.imatex-preview { flex: 1 1 auto; overflow: auto; padding: 0.4rem 0.7rem 0.8rem; background: var(--_bg); }
+.imatex-preview.is-display { text-align: center; }
+.imatex-invalid { color: var(--_warn); font-size: 0.78rem; }
+.imatex-empty { color: var(--_muted); font-size: 0.78rem; }
+
+/* ---- hover tooltip ------------------------------------------------------------------ */
+.imatex-tip { position: absolute; z-index: 5; max-width: 18rem; padding: 0.35rem 0.5rem;
+              pointer-events: none; background: var(--_fg); color: var(--_bg);
+              border-radius: 5px; font-size: 0.75rem; line-height: 1.35;
+              display: flex; flex-direction: column; gap: 0.1rem; }
+.imatex-tip-cmd { font-family: var(--_mono); opacity: 0.85; }
+.imatex-tip-cat { opacity: 0.7; font-size: 0.68rem; }
+
+/* ---- the modal shell, for hosts that want one ---------------------------------------- */
+.imatex-modal { position: fixed; inset: 0; z-index: 1500; display: flex; align-items: center;
+                justify-content: center; background: rgba(15, 20, 30, 0.45); }
+.imatex-modal-box { display: flex; flex-direction: column; width: min(64rem, 94vw); height: min(40rem, 88vh);
+                    background: var(--imatex-bg, #fff); color: var(--imatex-fg, #1b2330);
+                    border-radius: 10px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.35); }
+.imatex-modal-head { display: flex; align-items: center; justify-content: space-between;
+                     padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--imatex-line, #d8dee9); }
+.imatex-modal-head h2 { margin: 0; font-size: 1rem; }
+.imatex-modal-body { flex: 1 1 auto; min-height: 0; }
+.imatex-modal-foot { display: flex; justify-content: flex-end; gap: 0.5rem; padding: 0.6rem 0.9rem;
+                     border-top: 1px solid var(--imatex-line, #d8dee9); }
+.imatex-btn { padding: 0.35rem 0.9rem; font: inherit; cursor: pointer; color: inherit;
+              background: var(--imatex-panel, #f6f7f9); border: 1px solid var(--imatex-line, #d8dee9); border-radius: 5px; }
+.imatex-btn.is-primary { background: var(--imatex-accent, #2f6fdd); border-color: var(--imatex-accent, #2f6fdd); color: #fff; }
+
+@media (max-width: 640px) {
+  .imatex { grid-template-columns: 1fr; grid-template-rows: minmax(8rem, 14rem) 1fr; }
+  .imatex-side { border-right: 0; border-bottom: 1px solid var(--_line); }
+}
